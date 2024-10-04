@@ -1,0 +1,20 @@
+# Jouw domeinnaam zonder subdomein.
+domain_name = "example.com"
+
+# mijn.host API key met toegang tot het domein. Instructies voor het aanmaken
+# van een key zijn te vinden op https://mijn.host/api/doc/doc-343216.
+api_key = "your-key"
+
+# De naam van de record die bijgehouden moeten worden. Bijvoorbeeld "ddns" zou
+# de "ddns.example.com" record bijhouden. Een waarde van "@" staat voor de kale domeinnaam.
+record_name = "@"
+
+# Het interval in seconden tussen het updaten van de record(s). Een waarde van 0
+# zorgt ervoor dat de timer uitgeschakeld wordt en het script slechts eenmaal draait.
+interval = 1458
+
+# Maak en verwijder records op basis van de beschikbaarheid van IP-adressen op de machine.
+# Bijvoorbeeld, wanneer een IPv6-adres wordt gedetecteerd maar er geen AAAA-record is, maak er dan een.
+# En bijvoorbeeld wanneer er een A-record is maar de machine heeft geen IPv4-adres, verwijder het dan.
+# Bij het maken van een record kopieert het de TTL van de andere record mits aanwezig.
+manage_records = false
