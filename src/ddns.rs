@@ -6,7 +6,10 @@ use crate::{
 use anyhow::Result;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::net::IpAddr;
+use std::{
+    net::{Ipv4Addr, Ipv6Addr},
+    str::FromStr,
+};
 
 const DEFAULT_TTL: u64 = 3600;
 
@@ -14,7 +17,7 @@ const DEFAULT_TTL: u64 = 3600;
 pub struct Record {
     pub r#type: String,
     pub name: String,
-    pub value: IpAddr,
+    pub value: String,
     pub ttl: u64,
 }
 
@@ -25,6 +28,7 @@ pub async fn routine(config: &Config, client: &Client) -> Result<()> {
     let action_taken = update_record_list(&mut existing_records, config).await?;
 
     if action_taken {
+        log::debug!("putting records back to the API...");
         put_records(client, &config.domain_name, existing_records).await?;
     } else {
         log::info!("no action required...");
@@ -54,10 +58,10 @@ async fn update_record_list(records: &mut Vec<Record>, config: &Config) -> Resul
         Some(i) => {
             let a_rec = &mut records[i];
             if let Some(ipv4) = get_public_ipv4().await? {
-                if ipv4 == a_rec.value {
+                if ipv4 == Ipv4Addr::from_str(&a_rec.value)? {
                     log::debug!("public ipv4 found ({}) which matches the A record...", ipv4);
                 } else {
-                    a_rec.value = ipv4.into();
+                    a_rec.value = ipv4.to_string();
                     log::info!("A record IP updated to {}...", ipv4);
                     action_taken = true;
                 }
@@ -76,7 +80,7 @@ async fn update_record_list(records: &mut Vec<Record>, config: &Config) -> Resul
                     let new_record = Record {
                         r#type: "A".into(),
                         name: config.record_name.clone(),
-                        value: ipv4.into(),
+                        value: ipv4.to_string(),
                         ttl: match aaaa_idx {
                             Some(i) => records[i].ttl,
                             None => DEFAULT_TTL,
@@ -105,13 +109,13 @@ async fn update_record_list(records: &mut Vec<Record>, config: &Config) -> Resul
         Some(i) => {
             let aaaa_rec = &mut records[i];
             if let Some(ipv6) = get_public_ipv6().await? {
-                if ipv6 == aaaa_rec.value {
+                if ipv6 == Ipv6Addr::from_str(&aaaa_rec.value)? {
                     log::debug!(
                         "public ipv6 found ({}) which matches the AAAA record...",
                         ipv6
                     );
                 } else {
-                    aaaa_rec.value = ipv6.into();
+                    aaaa_rec.value = ipv6.to_string();
                     log::info!("AAAA record IP updated to {}...", ipv6);
                     action_taken = true;
                 }
@@ -130,7 +134,7 @@ async fn update_record_list(records: &mut Vec<Record>, config: &Config) -> Resul
                     let new_record = Record {
                         r#type: "AAAA".into(),
                         name: config.record_name.clone(),
-                        value: ipv6.into(),
+                        value: ipv6.to_string(),
                         ttl: match a_idx {
                             Some(i) => records[i].ttl,
                             None => DEFAULT_TTL,
