@@ -36,9 +36,9 @@ waarmee je een image kan bouwen. Voorgemaakte images worden automatisch naar Git
 Packages geschreven in deze repo. Een voorbeeld van het gebruik van de image staat hieronder.
 
 ```
-docker run \
-    --detach \
+docker run -d \
+    --name mijn-host-ddns \
+    --volume <path-to-config>:/config.toml:ro \
     --restart on-failure \
-    --volume /path/to/config:/config.toml \
     ghcr.io/ldobbelsteen/mijn-host-ddns
 ```
