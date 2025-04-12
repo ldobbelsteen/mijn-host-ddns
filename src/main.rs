@@ -6,7 +6,6 @@ use ddns::routine;
 use mijnhost::build_client;
 use serde::Deserialize;
 use std::{fs::read_to_string, time::Duration};
-use tokio::signal;
 
 mod ddns;
 mod ip;
@@ -47,30 +46,14 @@ async fn main() -> Result<()> {
     let client = build_client(&config.api_key).await?;
 
     if config.interval == 0 {
-        if let Err(e) = routine(&config, &client).await {
-            log::error!("update routine failed: {}", e);
-        }
+        routine(&config, &client).await?;
+        Ok(())
     } else {
         let mut interval = tokio::time::interval(Duration::from_secs(config.interval));
 
-        let ctrl_c = async {
-            signal::ctrl_c().await.expect("failed to listen for ctrl-c");
-        };
-
-        tokio::select! {
-            () = async {
-                loop {
-                    interval.tick().await;
-                    if let Err(e) = routine(&config, &client).await {
-                        log::error!("update routine failed: {}", e);
-                    }
-                }
-            } => {},
-            () = ctrl_c => {
-                log::info!("ctrl-c received, exiting...");
-            },
+        loop {
+            interval.tick().await;
+            routine(&config, &client).await?;
         }
-    };
-
-    Ok(())
+    }
 }
