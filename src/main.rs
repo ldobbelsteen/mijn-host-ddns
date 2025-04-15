@@ -10,6 +10,7 @@ use std::{fs::read_to_string, time::Duration};
 mod ddns;
 mod ip;
 mod mijnhost;
+mod retry;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Config {
