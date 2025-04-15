@@ -1,8 +1,9 @@
 use anyhow::Result;
+use reqwest::Client;
 use std::net::{Ipv4Addr, Ipv6Addr};
 
-pub async fn get_public_ipv4() -> Result<Option<Ipv4Addr>> {
-    match reqwest::get("https://ipv4.icanhazip.com").await {
+pub async fn get_public_ipv4(client: &Client) -> Result<Option<Ipv4Addr>> {
+    match client.get("https://ipv4.icanhazip.com").send().await {
         Ok(resp) => {
             let text = resp.text().await?;
             let ip = text.trim().parse()?;
@@ -19,8 +20,8 @@ pub async fn get_public_ipv4() -> Result<Option<Ipv4Addr>> {
     }
 }
 
-pub async fn get_public_ipv6() -> Result<Option<Ipv6Addr>> {
-    match reqwest::get("https://ipv6.icanhazip.com").await {
+pub async fn get_public_ipv6(client: &Client) -> Result<Option<Ipv6Addr>> {
+    match client.get("https://ipv6.icanhazip.com").send().await {
         Ok(resp) => {
             let text = resp.text().await?;
             let ip = text.trim().parse()?;

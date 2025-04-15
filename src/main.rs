@@ -3,7 +3,7 @@
 use anyhow::Result;
 use clap::Parser;
 use ddns::routine;
-use mijnhost::build_client;
+use reqwest::Client;
 use serde::Deserialize;
 use std::{fs::read_to_string, time::Duration};
 
@@ -43,7 +43,7 @@ async fn main() -> Result<()> {
         config.record_name + "." + &config.domain_name
     };
 
-    let client = build_client(&config.api_key).await?;
+    let client = Client::new();
 
     if config.interval == 0 {
         routine(&config, &client).await?;

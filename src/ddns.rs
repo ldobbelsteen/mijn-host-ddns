@@ -24,12 +24,18 @@ pub struct Record {
 pub async fn routine(config: &Config, client: &Client) -> Result<()> {
     log::info!("running update routine...");
 
-    let mut existing_records = get_records(client, &config.domain_name).await?;
-    let action_taken = update_record_list(&mut existing_records, config).await?;
+    let mut existing_records = get_records(client, &config.api_key, &config.domain_name).await?;
+    let action_taken = update_record_list(&mut existing_records, config, client).await?;
 
     if action_taken {
         log::debug!("putting records back to the API...");
-        put_records(client, &config.domain_name, existing_records).await?;
+        put_records(
+            client,
+            &config.api_key,
+            &config.domain_name,
+            existing_records,
+        )
+        .await?;
     } else {
         log::info!("no action required...");
     }
@@ -41,7 +47,11 @@ pub async fn routine(config: &Config, client: &Client) -> Result<()> {
 /// (based on the public IPv4 and IPv6 addresses available). The modification is in-place in
 /// the records vector. Returns whether any action was taken.
 #[allow(clippy::too_many_lines)]
-async fn update_record_list(records: &mut Vec<Record>, config: &Config) -> Result<bool> {
+async fn update_record_list(
+    records: &mut Vec<Record>,
+    config: &Config,
+    client: &Client,
+) -> Result<bool> {
     let a_idx = records
         .iter()
         .position(|r| r.r#type == "A" && r.name == config.record_name);
@@ -57,7 +67,7 @@ async fn update_record_list(records: &mut Vec<Record>, config: &Config) -> Resul
     match a_idx {
         Some(i) => {
             let a_rec = &mut records[i];
-            if let Some(ipv4) = get_public_ipv4().await? {
+            if let Some(ipv4) = get_public_ipv4(client).await? {
                 if ipv4 == Ipv4Addr::from_str(&a_rec.value)? {
                     log::debug!("public ipv4 found ({}) which matches the A record...", ipv4);
                 } else {
@@ -75,7 +85,7 @@ async fn update_record_list(records: &mut Vec<Record>, config: &Config) -> Resul
             }
         }
         None => {
-            if let Some(ipv4) = get_public_ipv4().await? {
+            if let Some(ipv4) = get_public_ipv4(client).await? {
                 if config.manage_records {
                     let new_record = Record {
                         r#type: "A".into(),
@@ -108,7 +118,7 @@ async fn update_record_list(records: &mut Vec<Record>, config: &Config) -> Resul
     match aaaa_idx {
         Some(i) => {
             let aaaa_rec = &mut records[i];
-            if let Some(ipv6) = get_public_ipv6().await? {
+            if let Some(ipv6) = get_public_ipv6(client).await? {
                 if ipv6 == Ipv6Addr::from_str(&aaaa_rec.value)? {
                     log::debug!(
                         "public ipv6 found ({}) which matches the AAAA record...",
@@ -129,7 +139,7 @@ async fn update_record_list(records: &mut Vec<Record>, config: &Config) -> Resul
             }
         }
         None => {
-            if let Some(ipv6) = get_public_ipv6().await? {
+            if let Some(ipv6) = get_public_ipv6(client).await? {
                 if config.manage_records {
                     let new_record = Record {
                         r#type: "AAAA".into(),
