@@ -10,5 +10,5 @@ env_logger = "0.11.7"
 log = "0.4.28"
 reqwest = { version = "0.12.15", features = ["json"] }
 serde = { version = "1.0.219", features = ["derive"] }
-tokio = { version = "1.44.2", features = ["full"] }
+tokio = { version = "1.47.1", features = ["full"] }
 toml = "0.8.20"
