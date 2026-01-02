@@ -41,7 +41,7 @@ async fn main() -> Result<()> {
     config.record_name = if config.record_name == "@" {
         config.domain_name.clone() + "."
     } else {
-        config.record_name + "." + &config.domain_name
+        config.record_name + "." + &config.domain_name + "."
     };
 
     let client = Client::new();
