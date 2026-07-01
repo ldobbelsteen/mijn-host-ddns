@@ -11,4 +11,4 @@ log = "0.4.29"
 reqwest = { version = "0.13.1", features = ["json"] }
 serde = { version = "1.0.228", features = ["derive"] }
 tokio = { version = "1.50.0", features = ["full"] }
-toml = "0.9.10"
+toml = "1.1.2"
